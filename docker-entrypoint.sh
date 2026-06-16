@@ -42,6 +42,9 @@ echo "Running seeders..."
 php artisan db:seed --force
 
 echo "Setting permissions..."
+chown -R www-data:www-data storage bootstrap/cache
 chmod -R 775 storage bootstrap/cache
+chown -R www-data:www-data public/profile_img 2>/dev/null || true
+chmod -R 775 public/profile_img 2>/dev/null || true
 
 exec "$@"
