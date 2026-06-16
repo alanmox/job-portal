@@ -64,7 +64,7 @@ class DatabaseSeeder extends Seeder
                 \App\Models\Job::create(array_merge($job, [
                     'user_id' => 1,
                     'status' => 1,
-                    'salary' => rand(1, 3) > 1 ? '$' . rand(20, 80) . 'k - $' . rand(81, 200) . 'k' : null,
+                    'salary' => rand(1, 3) > 1 ? 'TZS ' . number_format(rand(3, 10) * 100000) . ' - TZS ' . number_format(rand(11, 50) * 100000) : null,
                     'benefits' => 'Health insurance, Paid time off, Remote work options',
                     'responsibility' => 'Work with the team to deliver high-quality results on time.',
                     'qualifications' => 'Bachelor degree required. Relevant experience preferred.',
