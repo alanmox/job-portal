@@ -73,7 +73,7 @@
                                     @endforeach
                                     @else
                                         <tr>
-                                            <td colspan="6">Users not Found</td>
+                                            <td colspan="6">Job Types not Found</td>
                                         </tr>
                                     @endif
                                 </tbody>
@@ -100,7 +100,7 @@
             if(confirm('Are you sure you want to delete?')){
                 $.ajax({
                     type: "delete",
-                    url: "{{ route('admin.job_types.destroy',$job_type->id) }}",
+                    url: "{{ url('admin/job-types') }}/" + id,
                     data: {id: id},
                     dataType: "json",
                     success: function (response) {
