@@ -1,24 +1,33 @@
-FROM php:8.2-cli
+FROM node:18-alpine AS node-build
+WORKDIR /var/www/html
+COPY package.json package-lock.json* ./
+RUN npm ci && npm cache clean --force
+COPY . .
+RUN npm run build
 
+FROM php:8.2-fpm-alpine
 WORKDIR /var/www/html
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    unzip zip git curl libpng-dev libonig-dev libxml2-dev \
+RUN apk add --no-cache \
+    unzip zip git curl libpng-dev libxml2-dev oniguruma-dev \
     && docker-php-ext-install pdo pdo_mysql
 
-# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copy project
 COPY . .
 
-# Install dependencies
-RUN composer install --no-dev --optimize-autoloader
+COPY --from=node-build /var/www/html/public/build /var/www/html/public/build
 
-# Permissions
-RUN chmod -R 775 storage bootstrap/cache
+RUN composer install --no-dev --optimize-autoloader --no-interaction \
+    && chmod -R 775 storage bootstrap/cache \
+    && cp -r public /var/www/html/public-backup
 
-EXPOSE 10000
+COPY docker/php/php.ini /usr/local/etc/php/conf.d/custom.ini
 
-CMD php artisan serve --host=0.0.0.0 --port=10000
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+EXPOSE 9000
+
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["php-fpm"]

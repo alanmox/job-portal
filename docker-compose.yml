@@ -1,0 +1,91 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jobportal-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    environment:
+      - APP_NAME=CareerVibe
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_URL=http://job-portal.allantech.co.tz
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=job_portal
+      - DB_USERNAME=job_portal_user
+      - DB_PASSWORD=secret
+      - MAIL_MAILER=smtp
+      - MAIL_HOST=mailpit
+      - MAIL_PORT=1025
+      - MAIL_FROM_ADDRESS=noreply@careervibe.com
+      - MAIL_FROM_NAME=CareerVibe
+    volumes:
+      - app-storage:/var/www/html/storage
+      - app-public:/var/www/html/public
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - frontend
+      - backend
+
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: jobportal-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - app-public:/var/www/html/public:ro
+      - app-storage:/var/www/html/storage:ro
+    depends_on:
+      - app
+    networks:
+      - frontend
+
+  db:
+    image: mysql:8.0
+    container_name: jobportal-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: job_portal
+      MYSQL_USER: job_portal_user
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: root_secret
+    ports:
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_secret"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - backend
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: jobportal-mailpit
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8025:8025"
+    networks:
+      - backend
+
+volumes:
+  app-storage:
+  app-public:
+  mysql-data:
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge

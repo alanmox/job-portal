@@ -3,3 +3,9 @@
 .env
 /storage/*.key
 .git
+docker/
+docker-compose.yml
+.dockerignore
+.gitattributes
+.gitignore
+README.md
